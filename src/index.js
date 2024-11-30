@@ -490,29 +490,32 @@ export default class CanvasDraw extends PureComponent {
     // Simulate live-drawing of the loaded lines
     // TODO use a generator
     let curTime = 0;
-    let timeoutGap = immediate ? 0 : this.props.loadTimeOffset;
 
-    lines.forEach((line) => {
-      const { points, brushColor, brushRadius } = line;
+    if (lines.length === 0) return; // Do not draw empty lines array
 
-      // Draw all at once if immediate flag is set, instead of using setTimeout
-      if (immediate) {
-        // Draw the points
+    const totalPoints = lines.reduce((sum, line) => sum + line.points.length, 0);
+
+    if (immediate) { // Draw all at once if immediate flag is set, instead of using setTimeout
+      lines.forEach(line => {
+        const { points, brushColor, brushRadius } = line;
         this.drawPoints({
           points,
           brushColor,
           brushRadius,
         });
-
-        // Save line with the drawn points
         this.points = points;
         this.saveLine({ brushColor, brushRadius });
-        return;
-      }
+      });
+      return;
+    }
 
-      // Use timeout to draw
+    const timePerPoint = (this.props.loadTimeOffset*1000) / totalPoints; // loadTimeOffset is in seconds
+  
+    lines.forEach((line) => {
+      const { points, brushColor, brushRadius } = line;
+  
       for (let i = 1; i < points.length; i++) {
-        curTime += timeoutGap;
+        curTime += timePerPoint;
         window.setTimeout(() => {
           this.drawPoints({
             points: points.slice(0, i + 1),
@@ -521,10 +524,10 @@ export default class CanvasDraw extends PureComponent {
           });
         }, curTime);
       }
-
-      curTime += timeoutGap;
+  
+      // Add one more timePerPoint for saving the line
+      curTime += timePerPoint;
       window.setTimeout(() => {
-        // Save this line with its props instead of this.props
         this.points = points;
         this.saveLine({ brushColor, brushRadius });
       }, curTime);

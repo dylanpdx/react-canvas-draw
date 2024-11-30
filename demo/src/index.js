@@ -231,6 +231,7 @@ class Demo extends Component {
           hideGrid
           ref={canvasDraw => (this.loadableCanvas = canvasDraw)}
           saveData={localStorage.getItem("savedDrawing")}
+          loadTimeOffset={0.7}
         />
         <p>
           The saving & loading also takes different dimensions into account.
